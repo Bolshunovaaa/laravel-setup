@@ -12,7 +12,7 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Task::all(), 200);
     }
 
     /**
@@ -20,7 +20,19 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:new,in_progress,done',
+            'project_id' => 'required|exists:projects,id',
+            'assignee_id' => 'nullable|exists:users,id',
+            'due_date' => 'nullable|date',
+        ]);
+
+        $task = Task::create($validated);
+        \App\Events\TaskCreated::dispatch($task);
+
+        return response()->json($task, 201);
     }
 
     /**
@@ -28,7 +40,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        //
+        return response()->json($task, 200);
     }
 
     /**
@@ -36,7 +48,17 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'sometimes|required|in:new,in_progress,done',
+            'project_id' => 'sometimes|required|exists:projects,id',
+            'assignee_id' => 'nullable|exists:users,id',
+            'due_date' => 'nullable|date',
+        ]);
+
+        $task->update($validated);
+        return response()->json($task, 200);
     }
 
     /**
@@ -44,6 +66,7 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
+        $task->delete();
+        return response()->json(null, 204);
     }
 }
